@@ -311,14 +311,14 @@ def process_csv_files(
 
 
 # -------------------------------------------------------------------------------------------
-def get_vedges_details(customer, api_response_data, device_hostnames):
+def get_vedges_details(customer, api_response_data, specific_devices):
     """
     Parses JSON response and builds CSV file with vEdge details
 
     All other devices, such as vBond, vSmart are excluded
     :param customer: string to build correct directory to store CSV files
     :param api_response_data: JSON response
-    :param device_hostnames: optional list of hostnames, works as a filter
+    :param specific_devices: optional list of hostnames, works as a filter
     :return: list of deviceId of vEdge devices
     """
 
@@ -354,8 +354,12 @@ def get_vedges_details(customer, api_response_data, device_hostnames):
         if found:
             # only add vEdges to the return data
             # if a specific device_hostname requested,
-            if device_hostnames:
-                if element["host-name"] in device_hostnames:
+            if specific_devices:
+                # Look up in any hostnames in query matches a vEdge hostname received from vManage
+                if specific_devices["type"] == "host-name" and \
+                        next((s for s in specific_devices["device_list"] if s in element["host-name"]), None):
+                    device_ids.append(device_id)
+                elif specific_devices["type"] == "site-id" and element["site-id"] in specific_devices["device_list"]:
                     device_ids.append(device_id)
             else:
                 device_ids.append(device_id)
@@ -368,7 +372,6 @@ def get_vedges_details(customer, api_response_data, device_hostnames):
     )
 
     return device_ids
-
 
 # -------------------------------------------------------------------------------------------
 
@@ -584,23 +587,41 @@ def main():
 
     # Build device list to query - can be a list from CLI, or all devices if no DeviceId is specified
     device_list = []
-    device_hostnames = []
     found_device_id_in_filter = False
 
+    # handle site-id or hostname in query sting
+    devices_to_query = {}
+    values_to_query = []
+
     # if deviceId and hostname already specified in filter - 'where' condition, only query this device
-    # increases speed of query processing
-    # exception is when multiple device are there in when condition - so item["cond_value"] shouldn't be list
+    # exception is when multiple device are there in 'when' condition - checking item["cond_value"] isn't a list
     for item in query_condition:
         if "deviceId" in item["cond_field"] and not (isinstance(item["cond_value"], list)):
             # Querying particular devices
             device_list.append(item["cond_value"])
+            # already found deviceId - no need to get device list later
             found_device_id_in_filter = True
-        if "host-name" in item["cond_field"] and not (isinstance(item["cond_value"], list)):
-            device_hostnames.append(item["cond_value"])
+
+        # check if host-name or site-id is in query, get vEdge details only for these sites
+        elif "host-name" in item["cond_field"]:
+            devices_to_query["type"] = "host-name"
+            # if a list of host name already given using 'or' condition, simply use it, otherwise add to list
+            if (isinstance(item["cond_value"], list)):
+                values_to_query = item["cond_value"]
+            else:
+                values_to_query.append(item["cond_value"])
+
+        elif "site-id" in item["cond_field"]:
+            devices_to_query["type"] = "site-id"
+            if (isinstance(item["cond_value"], list)):
+                values_to_query = item["cond_value"]
+            else:
+                values_to_query.append(item["cond_value"])
+    devices_to_query["device_list"] = values_to_query
 
     if not found_device_id_in_filter:
-        # Get all vEdges device IDs, save vEdge device details in a CSV file,
-        device_list = get_vedges_details(customer_name, response_data, device_hostnames)
+        # Get vEdges device IDs to query
+        device_list = get_vedges_details(customer_name, response_data, devices_to_query)
 
     print(Fore.GREEN + "Got", str(len(device_list)), "vEdge devices")
     print(Style.RESET_ALL)

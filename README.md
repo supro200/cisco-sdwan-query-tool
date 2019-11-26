@@ -179,6 +179,19 @@ where index = 0 or 1 or 2 or 3 and deviceId = 3.1.125.1
 where ifname=ge0/4 or ge0/3
 ```
 
+You can query all vEdge device, or only a set of them using *deviceId* , *host-name*  or  *site-id* using **where** condition 
+
+Note *host-name* matches a substing, so the condition below will return data from devices containing 2070 or branch in hostnames:
+```
+host-name = 2070 or branch
+```
+
+Query by site-id or deviceId:
+```
+where site-id = 220 or 183" 
+deviceId = 3.1.125.1
+```
+
 #### Examples 
 
 To get started, use a simple query like this:
@@ -199,13 +212,18 @@ Add an additional condition to the previous example _and deviceId = 3.1.25.1_ an
 ```
 python sdnetsql.py -q "select src-ip,dst-ip,color,state from bfd_sessions where state = up and deviceId = 3.1.25.1" -u usera -c customera --html
 ```
+The same query, but query devices if by a part of hostname:
+```
+python sdnetsql.py -q "select src-ip,dst-ip,color,state from bfd_sessions where state = up and host-name = 2070 or 4011" -u usera -c customera --html
+```
+
 Similarly, query any other sources you define in *api_mounts.json* file.
 
 Get OMP sessions state:
 ```
 python sdnetsql.py -q "select * from omp_peers"" -u usera -c customera --html
 ```
-- Interface State:
+Interface State:
 ```
 python sdnetsql.py -q "select deviceId,vdevice-host-name,ifname,ip-address,port-type,if-admin-status,if-oper-status from interfaces " -u usera -c customera --html
 ```
