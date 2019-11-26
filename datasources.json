@@ -1,0 +1,54 @@
+[
+  {
+    "data_source":  "bgp_sessions",
+    "api_mount": "device/bgp/neighbors?deviceId="
+   },
+   {
+    "data_source":  "interfaces",
+    "api_mount":  "device/interface?deviceId="
+   },
+  {
+    "data_source":  "bfd_sessions",
+    "api_mount": "device/bfd/state/device?deviceId="
+   },
+  {
+    "data_source":  "cell_radio",
+    "api_mount":  "device/cellular/radio?deviceId="
+   },
+  {
+    "data_source":  "sla_stat",
+    "api_mount":  "device/app-route/statistics?deviceId="
+   },
+  {
+    "data_source":  "ipsec",
+    "api_mount":  "device/ipsec/localsa?deviceId="
+   },
+   {
+    "data_source":  "omp_peers",
+    "api_mount":  "device/omp/peers?deviceId="
+   },
+  {
+    "data_source":  "omp_routes_rec",
+    "api_mount":  "device/omp/routes/received?deviceId="
+   },
+  {
+    "data_source":  "omp_routes_adv",
+    "api_mount":  "device/omp/routes/advertised?deviceId="
+   },
+   {
+    "data_source":  "tlocs_rec",
+    "api_mount":  "device/omp/tlocs/received?deviceId="
+   },
+      {
+    "data_source":  "tlocs_adv",
+    "api_mount":  "device/omp/tlocs/advertised?deviceId="
+   },
+  {
+    "data_source":  "vpn",
+    "api_mount":  "device/vpn?deviceId="
+   },
+  {
+    "data_source":  "routes",
+    "api_mount":  "device/ip/routetable?deviceId="
+   }
+]
