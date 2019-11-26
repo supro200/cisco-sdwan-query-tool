@@ -17,8 +17,6 @@ You can easily define your own Data Source based on vManage API and start queryi
   * [Installation](#installation)
   * [How it works](#how-it-works)
   * [How to use it](#how-to-use-it)
-    + [CLI Parameter: Customer](#cli-parameter--customer)
-    + [CLI Parameter: Username](#cli-parameter--username)
   * [Queries](#queries)
       - [Data Sources](#data-sources)
       - [Fields and Conditions](#fields-and-conditions)

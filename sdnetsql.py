@@ -311,19 +311,60 @@ def process_csv_files(
 
 
 # -------------------------------------------------------------------------------------------
-def get_vedges_details(customer, api_response_data, specific_devices):
+def get_vedges_details(customer, api_response_data, query_condition):
     """
     Parses JSON response and builds CSV file with vEdge details
 
     All other devices, such as vBond, vSmart are excluded
+    :param query_condition: filter
     :param customer: string to build correct directory to store CSV files
-    :param api_response_data: JSON response
-    :param specific_devices: optional list of hostnames, works as a filter
+    :param api_response_data: JSON response with all devices from vManage
     :return: list of deviceId of vEdge devices
     """
 
     # List of devices - for return
     device_ids = []
+
+    # Build device list to query - can be a list from CLI, or all devices if no DeviceId is specified
+    device_list = []
+    found_device_id_in_filter = False
+
+    # handle site-id or hostname in query sting
+    devices_to_query = {}
+    values_to_query = []
+
+    # if deviceId and hostname already specified in filter - 'where' condition, only query this device
+    # exception is when multiple device are there in 'when' condition - checking item["cond_value"] isn't a list
+    for item in query_condition:
+        if "deviceId" in item["cond_field"] and not (isinstance(item["cond_value"], list)):
+            # Querying particular devices
+            device_list.append(item["cond_value"])
+            # already found deviceId - no need to get device list later
+            found_device_id_in_filter = True
+
+        # check if host-name or site-id is in query, get vEdge details only for these sites
+        elif "host-name" in item["cond_field"]:
+            devices_to_query["type"] = "host-name"
+            # if a list of host name already given using 'or' condition, simply use it, otherwise add to list
+            if (isinstance(item["cond_value"], list)):
+                values_to_query = item["cond_value"]
+            else:
+                values_to_query.append(item["cond_value"])
+            query_condition.remove(item)
+
+        elif "site-id" in item["cond_field"]:
+            devices_to_query["type"] = "site-id"
+            if (isinstance(item["cond_value"], list)):
+                values_to_query = item["cond_value"]
+            else:
+                values_to_query.append(item["cond_value"])
+            query_condition.remove(item)
+
+    devices_to_query["device_list"] = values_to_query
+
+    # found deviceId in condition filter
+    if found_device_id_in_filter:
+        return device_ids
 
     # Get CSV Headers for vEdge devices
     csv_headers = []
@@ -345,6 +386,7 @@ def get_vedges_details(customer, api_response_data, specific_devices):
     for element in api_response_data:
         csv_row = []
         for key, value in element.items():
+            # only getting vEdge devices from vManage
             if element["device-type"] == "vedge":
                 # Populate list - CSV row for a vEdge device
                 csv_row.append(value)
@@ -352,14 +394,13 @@ def get_vedges_details(customer, api_response_data, specific_devices):
                 device_id = element["deviceId"]
                 found = True
         if found:
-            # only add vEdges to the return data
-            # if a specific device_hostname requested,
-            if specific_devices:
+            # if specific devices requested - look up for host-name or site-id
+            if "type" in devices_to_query:
                 # Look up in any hostnames in query matches a vEdge hostname received from vManage
-                if specific_devices["type"] == "host-name" and \
-                        next((s for s in specific_devices["device_list"] if s in element["host-name"]), None):
+                if devices_to_query["type"] == "host-name" and \
+                        next((s for s in devices_to_query["device_list"] if s in element["host-name"]), None):
                     device_ids.append(device_id)
-                elif specific_devices["type"] == "site-id" and element["site-id"] in specific_devices["device_list"]:
+                elif devices_to_query["type"] == "site-id" and element["site-id"] in devices_to_query["device_list"]:
                     device_ids.append(device_id)
             else:
                 device_ids.append(device_id)
@@ -372,6 +413,7 @@ def get_vedges_details(customer, api_response_data, specific_devices):
     )
 
     return device_ids
+
 
 # -------------------------------------------------------------------------------------------
 
@@ -466,6 +508,7 @@ def save_report_to_html(csv_file, html_file):
         f.write(html_string)
     print("\nHTML Report saved as: " + str(Path(html_file).resolve()))
 
+
 # -------------------------------------------------------------------------------------------
 
 def stop_ssh_tunnel(ssh_tunnel):
@@ -475,17 +518,21 @@ def stop_ssh_tunnel(ssh_tunnel):
         ssh_tunnel.stop()
         print("")
 
+
 # -------------------------------------------------------------------------------------------
 
 # placeholder for Pytest
 def test_case1():
     assert True
 
+
 def test_case2():
     assert True
 
+
 def test_case3():
     assert True
+
 
 # -------------------------------------------------------------------------------------------
 def main():
@@ -495,7 +542,7 @@ def main():
     # Check CLI arguments
     options = parse_args()
 
-    # Parse query from CLI input and populate parameters for Dataframe merge
+    # Parse query from CLI input
     query_processed = command_analysis(options.query)
 
     # Analyse query
@@ -585,43 +632,8 @@ def main():
     response = json.loads(sdwan_controller.get_request("device"))
     response_data = response["data"]
 
-    # Build device list to query - can be a list from CLI, or all devices if no DeviceId is specified
-    device_list = []
-    found_device_id_in_filter = False
-
-    # handle site-id or hostname in query sting
-    devices_to_query = {}
-    values_to_query = []
-
-    # if deviceId and hostname already specified in filter - 'where' condition, only query this device
-    # exception is when multiple device are there in 'when' condition - checking item["cond_value"] isn't a list
-    for item in query_condition:
-        if "deviceId" in item["cond_field"] and not (isinstance(item["cond_value"], list)):
-            # Querying particular devices
-            device_list.append(item["cond_value"])
-            # already found deviceId - no need to get device list later
-            found_device_id_in_filter = True
-
-        # check if host-name or site-id is in query, get vEdge details only for these sites
-        elif "host-name" in item["cond_field"]:
-            devices_to_query["type"] = "host-name"
-            # if a list of host name already given using 'or' condition, simply use it, otherwise add to list
-            if (isinstance(item["cond_value"], list)):
-                values_to_query = item["cond_value"]
-            else:
-                values_to_query.append(item["cond_value"])
-
-        elif "site-id" in item["cond_field"]:
-            devices_to_query["type"] = "site-id"
-            if (isinstance(item["cond_value"], list)):
-                values_to_query = item["cond_value"]
-            else:
-                values_to_query.append(item["cond_value"])
-    devices_to_query["device_list"] = values_to_query
-
-    if not found_device_id_in_filter:
-        # Get vEdges device IDs to query
-        device_list = get_vedges_details(customer_name, response_data, devices_to_query)
+    # Get vEdges device IDs to query
+    device_list = get_vedges_details(customer_name, response_data, query_condition)
 
     print(Fore.GREEN + "Got", str(len(device_list)), "vEdge devices")
     print(Style.RESET_ALL)
@@ -683,6 +695,7 @@ def main():
             get_file_path(customer_name, api_query.split("?")[0], "report") + ".csv",
             get_file_path(customer_name, api_query.split("?")[0], "report") + ".html",
         )
+
 
 if __name__ == "__main__":
     main()
