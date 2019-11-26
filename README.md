@@ -230,7 +230,8 @@ Query three latest IP SLA data (intervals 0 or 1 or 2)
 python sdnetsql.py -q "select vdevice-name,remote-system-ip,local-color,remote-color,mean-latency,loss,mean-loss,mean-jitter,average-jitter,vdevice-name,local-color,remote-color,mean-latency,loss,mean-loss,mean-jitter,average-jittervdevice-name,remote-system-ip,local-color,remote-color,mean-latency,loss,mean-loss,mean-jitter,average-jitter from sla_stat where index = 0 or 1 or 2 and deviceId = 3.1.1.1 " -u usera -c customera --html
 ```
 
-Cell interfaces statistic (note Viptela and Cisco devices return different fields):
+Cell interfaces statistic (note Viptela and Cisco devices return different fields)
+
 vEdges:
 ```
 python sdnetsql.py -q "select vdevice-host-name,deviceId,if-name,mode,band,rssi,rsrp,rsrp-comment,rsrq,rsrq-comment,snr,snr-comment from cell_radio" -u usera -c customera --html
