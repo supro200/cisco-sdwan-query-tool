@@ -478,10 +478,11 @@ def stop_ssh_tunnel(ssh_tunnel):
 def test_case1():
     assert True
 
-
 def test_case2():
     assert True
 
+def test_case3():
+    assert True
 
 # -------------------------------------------------------------------------------------------
 def main():
@@ -661,9 +662,6 @@ def main():
             get_file_path(customer_name, api_query.split("?")[0], "report") + ".csv",
             get_file_path(customer_name, api_query.split("?")[0], "report") + ".html",
         )
-
-
-
 
 if __name__ == "__main__":
     main()
