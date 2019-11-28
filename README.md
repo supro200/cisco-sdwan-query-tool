@@ -69,7 +69,7 @@ When processing data, the script uses/creates the following directories:
 
 If *--html-output option* is selected, the .html files are places in **reports/**
 
-Possible data sources to query and the corresponding API are defined in **api_mounts.json** and vManage controllers in **customers.json** 
+Possible data sources to query and the corresponding API are defined in **datasource.json** and vManage controllers in **customers.json** 
 
 See below for more details.
 
@@ -93,7 +93,7 @@ Optional:
 >
 >  *--screen-output* - Prints report to screen. CSV reports are always generated. Default is On.
 >
->  *--screen-lines*  - Number of lines printed to screen. Full output is always printed to CSV files. Default is 10.
+>  *--screen-lines*  - Number of lines printed to screen. Full output is always printed to CSV files. Default is 30.
 >
 >  *--html-output*, *-html*   - Prints report to HTML. CSV reports are always generated. Default is off.
 
@@ -135,7 +135,7 @@ Data Source is used in queries in **from** clause, for example:
 ```
 select * from <datasource>
 ```
-You can add a new Datasource to file **api_mounts.json**, and start querying it.
+You can add a new Datasource to file **datasources.json**, and start querying it.
 
 The Data source definition format:
 ```
@@ -144,7 +144,7 @@ The Data source definition format:
     "api_mount": "device/bgp/neighbors?deviceId="     <<<<<<  actual vManage REST API endpoint
    }
 ```
-**api_mounts.json** defines the actual vManage API endpoins and currently only supports API requests containing ?deviceId= part. 
+**datasources.json** defines the actual vManage API endpoins and currently only supports API requests containing ?deviceId= part. 
 See the list of supported API endpoints at https://vManage-IP/apidocs/
 
 #### Fields and Conditions
@@ -170,6 +170,7 @@ where state = up and color = mpls
 ```
 
 It is also possible to specify multiple values for a condition with keyword **or**
+
 For example: 
 ```
 where state = up and color = mpls or lte
@@ -177,16 +178,16 @@ where index = 0 or 1 or 2 or 3 and deviceId = 3.1.125.1
 where ifname=ge0/4 or ge0/3
 ```
 
-You can query all vEdge device, or only a set of them using *deviceId* , *host-name*  or  *site-id* using **where** condition 
+You can query all vEdge devices, or only a set of them using *deviceId* , *host-name*  or  *site-id* leveraging **where** condition 
 
 Note *host-name* matches a substing, so the condition below will return data from devices containing 2070 or branch in hostnames:
 ```
-host-name = 2070 or branch
+host-name = 2070 or branch or syd
 ```
 
 Query by site-id or deviceId:
 ```
-where site-id = 220 or 183" 
+where site-id = 220 or 183 or 228
 deviceId = 3.1.125.1
 ```
 
@@ -198,7 +199,7 @@ To get started, use a simple query like this:
 python sdnetsql.py -q "select * from bfd_sessions where state = up" -u usera -c customera --html
 ```
 This query will return all active BFD sessions from all devices.
-The might be too many fields returned, so modify the query, include only interesting fields:
+There might be too many fields returned, so modify the query, include only interesting fields:
 ```
 python sdnetsql.py -q "select src-ip,dst-ip,color,state from bfd_sessions" -u usera -c customera --html
 ```
@@ -210,16 +211,16 @@ Add an additional condition to the previous example _and deviceId = 3.1.25.1_ an
 ```
 python sdnetsql.py -q "select src-ip,dst-ip,color,state from bfd_sessions where state = up and deviceId = 3.1.25.1" -u usera -c customera --html
 ```
-The same query, but query devices if by a part of hostname:
+The same query, but query devices by a part of hostname:
 ```
 python sdnetsql.py -q "select src-ip,dst-ip,color,state from bfd_sessions where state = up and host-name = 2070 or 4011" -u usera -c customera --html
 ```
 
-Similarly, query any other sources you define in *api_mounts.json* file.
+Similarly, query any other sources you define in *datasources.json* file.
 
 Get OMP sessions state:
 ```
-python sdnetsql.py -q "select * from omp_peers"" -u usera -c customera --html
+python sdnetsql.py -q "select * from omp_peers" -u usera -c customera --html
 ```
 Interface State:
 ```
@@ -237,7 +238,7 @@ Query only IPSec interfaces status:
 ```
 python sdnetsql.py -q "select vdevice-host-name,ifname,ip-address,port-type,if-admin-status,if-oper-status from interfaces where ifname=ipsec and af-type=ipv4" -u usera -c customera --html
 ```
-Query latest IP SLA data (interval 0)
+Query latest IP SLA data (interval 0) - if you have hub-and-spoke topology, query the hub device to get all spoke SLA data
 ```
 python sdnetsql.py -q "select vdevice-name,remote-system-ip,local-color,remote-color,mean-latency,loss,mean-loss,mean-jitter,average-jitter,vdevice-name,local-color,remote-color,mean-latency,loss,mean-loss,mean-jitter,average-jittervdevice-name,remote-system-ip,local-color,remote-color,mean-latency,loss,mean-loss,mean-jitter,average-jitter from sla_stat where index = 0 and deviceId = 3.1.1.1 " -u usera -c customera --html
 ```

@@ -20,6 +20,14 @@
     "api_mount":  "device/app-route/statistics?deviceId="
    },
   {
+    "data_source":  "vpn",
+    "api_mount":  "device/vpn?deviceId="
+   },
+  {
+    "data_source":  "routes",
+    "api_mount":  "device/ip/routetable?deviceId="
+   },
+  {
     "data_source":  "ipsec",
     "api_mount":  "device/ipsec/localsa?deviceId="
    },
@@ -39,16 +47,8 @@
     "data_source":  "tlocs_rec",
     "api_mount":  "device/omp/tlocs/received?deviceId="
    },
-      {
+  {
     "data_source":  "tlocs_adv",
     "api_mount":  "device/omp/tlocs/advertised?deviceId="
-   },
-  {
-    "data_source":  "vpn",
-    "api_mount":  "device/vpn?deviceId="
-   },
-  {
-    "data_source":  "routes",
-    "api_mount":  "device/ip/routetable?deviceId="
    }
 ]
