@@ -1,0 +1,12 @@
+[
+    {
+		"customer": "sandbox",
+		"vmanage_ip": "sandboxsdwan.cisco.com"
+	},
+	{
+		"customer": "customera",
+		"vmanage_ip": "10.121.136.20",
+		"vmanage_fqdn": "vmanage.customera.com",
+		"jump_host": "jumphost01.mgmt.local"
+	}
+]

@@ -258,6 +258,8 @@ cEdges:
 python sdnetsql.py -q "select vdevice-host-name,cellular-interface,technology,radio-rsrq,radio-rsrp,radio-rssi from cell_radio where cellular-interface=Cellular0/2/0 or Cellular0/2/1" -u usera -c customera --html
 ```
 
+Note: Certificate warnings are disabled for using with sandbox, comment the line in main() for using in production
+requests.packages.urllib3.disable_warnings() 
 
 Any feedback, contributions, and requests are much appreciated, please send them to supro200@gmail.com
 

@@ -5,11 +5,13 @@ import argparse
 import sys
 import pandas as pd
 import numpy as np
+import requests
 from tqdm import tqdm  # progress bar
 from colorama import init, Fore, Style  # colored screen output
 from sshtunnel import SSHTunnelForwarder  # ssh tunnel to jump host
 from rest_api_lib import rest_api_lib  # lib to make queries to vManage
 from pathlib import Path  # OS-agnostic file handling
+
 
 # Separate directories for unprocessed source data and results - CSV and HTML
 RAW_OUTPUT_DIR = "raw_data/"
@@ -513,10 +515,11 @@ def save_report_to_html(csv_file, html_file):
 
 def stop_ssh_tunnel(ssh_tunnel):
     # Received data, closing ssh tunnel
-    if ssh_tunnel.is_active:
-        print("Closing SSH tunnel connection...")
-        ssh_tunnel.stop()
-        print("")
+    if ssh_tunnel:
+        if ssh_tunnel.is_active:
+            print("Closing SSH tunnel connection...")
+            ssh_tunnel.stop()
+            print("")
 
 
 # -------------------------------------------------------------------------------------------
@@ -536,6 +539,10 @@ def test_case3():
 
 # -------------------------------------------------------------------------------------------
 def main():
+
+    # Added for using with sandbox, comment the line below for using in production
+    requests.packages.urllib3.disable_warnings()
+
     # init colorama
     init()
 
@@ -572,7 +579,10 @@ def main():
     for item in customers_definitions:
         if item["customer"] == customer_name:
             vmanage_host = item["vmanage_ip"]
-            jump_host = item["jump_host"]
+            try:
+              jump_host = item["jump_host"]
+            except KeyError:
+               print("No jumphost defined, connecting directly...")
     if not vmanage_host:
         # No such customer No vManage defined - existing program
         print(
@@ -580,7 +590,9 @@ def main():
         )
         exit(1)
 
-    print("Found vManage Host: ", vmanage_host, " Connecting via jumphost:", jump_host)
+    print("Found vManage Host: ", vmanage_host)
+    if jump_host:
+        print(" Connecting via jumphost:", jump_host)
 
     # Add DeviceID field if not already inclided
     if (
@@ -595,6 +607,7 @@ def main():
     password = getpass.getpass("Password: ")
 
     # jump host is defined for a customer, build ssh tunnel
+    ssh_tunnel = ""
     if jump_host:
         try:
             ssh_tunnel = SSHTunnelForwarder(
@@ -611,21 +624,25 @@ def main():
             print("Jump host is defined, but can't connect to it, exiting...")
             exit(1)
 
+        vmanage_connect_port = ssh_tunnel.local_bind_port
+
         print(
             "SSH tunnel established:", jump_host,
             "Allocated local port:", ssh_tunnel.local_bind_port,
         )  # show assigned local port
         vmanage_host = "127.0.0.1"  # set vmanage host to local tunnel endpoint
     # ssh tunnel has been built
+    else:
+        vmanage_connect_port = 8443
 
     # Initialise vManage
     try:
         sdwan_controller = rest_api_lib(
-            vmanage_host, ssh_tunnel.local_bind_port, options.user, password
+            vmanage_host, vmanage_connect_port, options.user, password
         )
     except:
         print(Fore.RED + "Could not connect to vManage, exiting...")
-        ssh_tunnel.stop()
+        stop_ssh_tunnel(ssh_tunnel)
         exit(0)
 
     # Get vEdge device details
