@@ -11,6 +11,9 @@ Simple examples :
 python sdnetsql.py -q "select peer-addr,as from bgp_sessions where state=established" --user=user-a --customer=cust-a --html
 python sdnetsql.py -q "select vdevice-host-name,ifname,ip-address,port-type,if-admin-status,if-oper-status from interfaces where vdevice-host-name=jc7003edge01 and af-type=ipv4" --user=user-a --customer=cust-a --html
 ```
+
+![Image description](screenshot.png)
+
 You can easily define your own Data Source based on vManage API and start querying it.
 
 - [Cisco SD-WAN Query Tool](#cisco-sd-wan-query-tool)
