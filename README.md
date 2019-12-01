@@ -1,5 +1,4 @@
 [![Python 3](https://img.shields.io/badge/python-3.5%20%7C%203.6%20%7C%203.7-blue)](https://www.python.org/downloads/)
-
 # Cisco SD-WAN Query Tool
 
 This tool allows to perform SQL-like queries on Cisco vManage controller, like this:
