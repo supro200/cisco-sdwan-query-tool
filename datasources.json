@@ -50,5 +50,22 @@
   {
     "data_source":  "tlocs_adv",
     "api_mount":  "device/omp/tlocs/advertised?deviceId="
+   },
+    {
+    "data_source":  "contr_conn",
+    "api_mount":  "device/control/connections/?deviceId="
+   },
+  {
+    "data_source":  "software",
+    "api_mount":  "device/software?deviceId="
+   },
+  {
+    "data_source":  "system",
+    "api_mount":  "device/system/info?deviceId="
+   },
+  {
+    "data_source":  "transport_conn",
+    "api_mount":  "device/transport/connection?deviceId="
    }
+
 ]
