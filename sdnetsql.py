@@ -79,6 +79,7 @@ def parse_args(args=sys.argv[1:]):
     )
     optional.add_argument(
         "--screen-output",
+        "--sc",
         default=True,
         required=False,
         action="store_true",
@@ -97,6 +98,16 @@ def parse_args(args=sys.argv[1:]):
         default=False,
         action="store_true",
         help="Prints report to HTML. CVS reports are always generated",
+    )
+    optional.add_argument(
+        "--report-dir",
+        "-dir",
+        help="Specify subdirectory for reports",
+    )
+    optional.add_argument(
+        "--password",
+        "-p",
+        help="Specify subdirectory for reports",
     )
     return parser.parse_args(args)
 
@@ -126,6 +137,10 @@ def command_analysis(text):
 
     Written by Ilya Zyuzin, McKinnon Secondary College, 07K. 2019.
     """
+
+    # TODO: implement sort by in SQL parser
+
+
     fields = []
     source = ""
     conditions = []
@@ -205,27 +220,32 @@ def command_analysis(text):
 
 # -------------------------------------------------------------------------------------------
 
-def get_file_path(customer, api_mount, file_type):
+def get_file_path(customer, report_tag_dir, api_mount, file_type):
     """
     Builds file name from input arguments
 
     :param customer: Customer name
+    :param + report_tag_dir: optional string to create a subdirectory for set of reports
     :param api_mount: vManage API mount point
     :param file_type: report or raw output
     :return: full path with filename
     """
 
+    # add / at the end of report_tag_dir and convert to string
+    if report_tag_dir:
+        if not "/" in report_tag_dir:
+            report_tag_dir += "/"
+        report_tag_dir = str(report_tag_dir)
+
     if file_type == "report":
-        file_name = REPORT_DIR + customer + "/" + api_mount.replace("/", "_")
+        file_name = REPORT_DIR + customer + "/" + report_tag_dir + api_mount.replace("/", "_")
         # Create directory if does not exit
-        Path(REPORT_DIR + customer).mkdir(parents=True, exist_ok=True)
+        Path(REPORT_DIR + customer + "/" + report_tag_dir).mkdir(parents=True, exist_ok=True)
     else:
         file_name = RAW_OUTPUT_DIR + customer + "/" + api_mount.replace("/", "_")
         Path(RAW_OUTPUT_DIR + customer).mkdir(parents=True, exist_ok=True)
 
     return file_name
-
-
 # -------------------------------------------------------------------------------------------
 
 def print_to_csv_file(headers, content, file_name):
@@ -252,14 +272,22 @@ def print_to_csv_file(headers, content, file_name):
 # -------------------------------------------------------------------------------------------
 
 def process_csv_files(
-        join_dataframes, common_column, fields_to_select, filter, file1, file2, result_file
+        join_dataframes, common_column, fields_to_select, sort_by, filter, file1, file2, result_file
 ):
     """
     Joins two dataframes.
     Input parameters:
          - common_column
          - two csv files to join
-    Writes raw output to a report file
+    Writes raw output to a CSV file
+    @param join_dataframes:
+    @param common_column:
+    @param fields_to_select:
+    @param sort_by:
+    @param filter:
+    @param file1:
+    @param file2:
+    @param result_file:
     """
 
     if join_dataframes:
@@ -308,7 +336,9 @@ def process_csv_files(
             except:
                 # simply ignore any exceptions, not filtered results
                 pass
-
+    # sort
+    result_pd.sort_values(sort_by, inplace=True, ascending=True)
+    # output to CSV file
     result_pd.to_csv(result_file, index=False)
 
 
@@ -411,8 +441,7 @@ def get_vedges_details(customer, api_response_data, query_condition):
 
     # Dump data
     print_to_csv_file(
-        csv_headers, csv_data, get_file_path(customer, "vedges", "raw_output") + ".csv"
-    )
+        csv_headers, csv_data, get_file_path(customer, "", "vedges", "raw_output") + ".csv")
 
     return device_ids
 
@@ -427,10 +456,10 @@ def run_api_query_and_save_to_csv(customer, sdwan_controller, api_query, device_
     # The script uses the output .csv files previously collected
     if no_connect:
         try:
-            df = pd.read_csv(get_file_path(customer, api_query.split("?")[0], "raw_output") + ".csv")
+            df = pd.read_csv(get_file_path(customer, "", api_query.split("?")[0], "raw_output") + ".csv")
         except FileNotFoundError:
             # no such file
-            print("Could not read CSV file: ", get_file_path(customer, api_query.split("?")[0], "raw_output") + ".csv")
+            print("Could not read CSV file: ", get_file_path(customer, "", api_query.split("?")[0], "raw_output") + ".csv")
             print("Try to remove no-connect option")
             return 0
         return len(df.index)
@@ -474,7 +503,7 @@ def run_api_query_and_save_to_csv(customer, sdwan_controller, api_query, device_
         df.set_index("deviceId", inplace=True)
 
     #  Dump dataframe to CSV, don't include anything after ? in the filename
-    df.to_csv(get_file_path(customer, api_query.split("?")[0], "raw_output") + ".csv")
+    df.to_csv(get_file_path(customer, "", api_query.split("?")[0], "raw_output") + ".csv")
 
     if len(skipped_devices) > 0:
         print(Fore.RED + "\n>>> Check if these devices and reachable, couldn't get data from: ", skipped_devices)
@@ -603,8 +632,11 @@ def main():
     ):
         fields_to_select.insert(0, "deviceId")
 
-    # Ask for password
-    password = getpass.getpass("Password: ")
+    if options.password:
+        password = options.password
+    else:
+        # Ask for password
+        password = getpass.getpass("Password: ")
 
     # jump host is defined for a customer, build ssh tunnel
     ssh_tunnel = ""
@@ -668,21 +700,29 @@ def main():
     # Received data, don't need ssh tunnel anymore, closing connection
     stop_ssh_tunnel(ssh_tunnel)
 
+    # sorting by first column - fields_to_select[0] and then second fields_to_select[1]
+    # TODO: implement sort by in SQL parser
+    if fields_to_select[0] == "*":
+        sort_by = ["deviceId"]
+    else:
+        sort_by = [fields_to_select[0],fields_to_select[1]]
+
     # Process CSV files and generate reports
     process_csv_files(
         False,
         "",
         fields_to_select,
+        sort_by,
         query_condition,
-        get_file_path(customer_name, api_query.split("?")[0], "raw_output") + ".csv",
+        get_file_path(customer_name, "", api_query.split("?")[0], "raw_output") + ".csv",
         "",
-        get_file_path(customer_name, api_query.split("?")[0], "report") + ".csv",
+        get_file_path(customer_name, options.report_dir, api_query.split("?")[0], "report") + ".csv",
     )
 
     # print result CSV file to screen unless it's set to False is CLI arguments
     if options.screen_output:
         df = pd.read_csv(
-            get_file_path(customer_name, api_query.split("?")[0], "report") + ".csv",
+            get_file_path(customer_name, options.report_dir, api_query.split("?")[0], "report") + ".csv",
             index_col=0,
         )
 
@@ -709,8 +749,8 @@ def main():
 
     if options.html_output:
         save_report_to_html(
-            get_file_path(customer_name, api_query.split("?")[0], "report") + ".csv",
-            get_file_path(customer_name, api_query.split("?")[0], "report") + ".html",
+            get_file_path(customer_name, options.report_dir, api_query.split("?")[0], "report") + ".csv",
+            get_file_path(customer_name, options.report_dir, api_query.split("?")[0], "report") + ".html",
         )
 
 
