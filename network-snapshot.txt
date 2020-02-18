@@ -1,0 +1,40 @@
+# Get network status snapshot
+# ---------------------------
+# Overall system status and health:
+python sdnetsql.py -q "select deviceId,name,state_description,ompPeersUp,vbond,state,version,defaultVersion,status,memState,cpuState,system-ip,site-id,reachability,host-name,certificate-validity,vmanage-system-ip,vmanageConnectionState,ompPeers,ompPeersDown,ompPeersUp,controlConnectionsToVsmarts,controlConnections,controlConnectionsUp,controlConnectionsDown,bfdSessions,bfdSessionsUp,bfdSessionsDown from system" --user=usera --password=XXX --customer=test --html --report-dir=before-changes
+
+# Software, active and available:
+python sdnetsql.py -q "select deviceId,default,vdevice-dataKey,software,vdevice-name,active,version,confirmed,vdevice-host-name from software" --user=usera --password=XXX --customer=test --html --report-dir=before-changes
+
+# Interface status:
+python sdnetsql.py -q "select vdevice-host-name,ifname,ip-address,port-type,if-admin-status,if-oper-status from interfaces where af-type=ipv4" --user=usera --password=XXX --customer=test --html --report-dir=before-changes
+
+# ipsec status:
+python sdnetsql.py -q "select deviceId,tloc-color,vdevice-dataKey,vdevice-name,port,tloc-address,ip,vdevice-host-name from ipsec" --user=usera --password=XXX --customer=test --html --report-dir=before-changes
+
+# Routing table:
+python sdnetsql.py -q "select deviceId,rstatus,protocol,vdevice-dataKey,vdevice-name,prefix,nexthop-addr,vpn-id,nexthop-type,vdevice-host-name,address-family,nexthop-ifname,nexthop-vpn,color,ip,encap,nexthop-label from routes" --user=usera --password=XXX --customer=test --html --report-dir=before-changes
+
+# BFD sessions:
+python sdnetsql.py -q "select src-ip,dst-ip,color,state from bfd_sessions" --user=usera --password=XXX --customer=test --html --report-dir=before-changes
+
+# OMP peers:
+python sdnetsql.py -q "select deviceId,domain-id,vdevice-name,refresh,site-id,type,vdevice-host-name,vdevice-dataKey,peer,legit,state from omp_peers" --user=usera --password=XXX --customer=test --html --report-dir=before-changes
+
+# OMP routes advertised:
+python sdnetsql.py -q "select deviceId,overlay-id,color,vdevice-name,prefix,ip,label,encap,site-id,originator,vpn-id,vdevice-host-name,path-id,protocol,vdevice-dataKey,metric,address-family,to-peer,preference from omp_routes_adv" --user=usera --password=XXX --customer=test --html --report-dir=before-changes
+
+# OMP routes received:
+python sdnetsql.py -q "select deviceId,overlay-id,color,vdevice-name,prefix,ip,from-peer,label,encap,site-id,originator,vpn-id,vdevice-host-name,protocol,vdevice-dataKey,metric,attribute-type,address-family,status,preference from omp_routes_rec" --user=usera --password=XXX --customer=test --html --report-dir=before-changes
+
+# OMP tlocs received:
+python sdnetsql.py -q "select deviceId,color,vdevice-name,ip,tloc-auth-type,preference,from-peer,weight,encap,site-id,originator,vdevice-host-name,tloc-private-ip,vdevice-dataKey,tloc-private-port,tloc-encrypt-type,tloc-proto,address-family from tlocs_rec" --user=usera --password=XXX --customer=test --html --report-dir=before-changes
+
+# OMP tlocs advertised:
+python sdnetsql.py -q "select deviceId,color,vdevice-name,ip,tloc-auth-type,preference,weight,encap,site-id,originator,vdevice-host-name,tloc-private-ip,vdevice-dataKey,tloc-private-port,tloc-encrypt-type,tloc-proto,address-family,to-peer from tlocs_adv" --user=usera --password=XXX --customer=test --html --report-dir=before-changes
+
+# Transport connections:
+python sdnetsql.py -q "select deviceId,vdevice-dataKey,vdevice-name,destination,host,state,vdevice-host-name,track-type from transport_conn" --user=usera --password=XXX --customer=test --html --report-dir=before-changes
+
+# Control Connections:
+python sdnetsql.py -q "select deviceId,domain-id,instance,vdevice-name,behind-proxy,system-ip,remote-color,site-id,private-port,controller-group-id,vdevice-host-name,local-color,peer-type,protocol,vdevice-dataKey,state,private-ip from contr_conn" --user=usera --password=XXX --customer=test --html --report-dir=after
