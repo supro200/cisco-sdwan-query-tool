@@ -44,8 +44,8 @@ Windows:
 ```
 python -m venv <path>
 <path>\Scripts\activate.bat
-git clone https://github.com/supro200/sdwan-query-tool.git
-cd sdwan-query-tool
+git clone https://github.com/supro200/cisco-sdwan-query-tool.git
+cd cisco-sdwan-query-tool
 pip install -r requirements.txt
 python sdnetsql.py -h
 ```
@@ -101,6 +101,12 @@ Optional:
 >  *--screen-lines*  - Number of lines printed to screen. Full output is always printed to CSV files. Default is 30.
 >
 >  *--html-output*, *-html*   - Prints report to HTML. CSV reports are always generated. Default is off.
+>
+>  *--report-dir*, *-dir*   - Directory for reports. If not specified, a new directory will be created in format YYYY-MM-DD. 
+>                             This can be used for comparing output of the same command, for example before and after making network changes.
+>                             Please see *network-snapshot.txt* as an example
+>  *--password*, *-p*  - Password. If not given, you'll be asked to enter it when run the script. 
+>                                  Note: if you access vManage via a jumphost, the same password will be used for both devices.  
 
 ### CLI Parameter: Customer 
 

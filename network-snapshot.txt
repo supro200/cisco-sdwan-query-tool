@@ -1,3 +1,4 @@
+# Example of taking snapshot of the SD-WAN network
 # Get network status snapshot
 # ---------------------------
 # Overall system status and health:

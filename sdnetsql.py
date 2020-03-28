@@ -6,6 +6,7 @@ import sys
 import pandas as pd
 import numpy as np
 import requests
+from datetime import datetime
 from tqdm import tqdm  # progress bar
 from colorama import init, Fore, Style  # colored screen output
 from sshtunnel import SSHTunnelForwarder  # ssh tunnel to jump host
@@ -102,12 +103,12 @@ def parse_args(args=sys.argv[1:]):
     optional.add_argument(
         "--report-dir",
         "-dir",
-        help="Specify subdirectory for reports",
+        help="Specify directory for reports. If not specified, a new directory will be built: YYYY-MM-DD",
     )
     optional.add_argument(
         "--password",
         "-p",
-        help="Specify subdirectory for reports",
+        help="Password. If not specified, ",
     )
     return parser.parse_args(args)
 
@@ -220,7 +221,7 @@ def command_analysis(text):
 
 # -------------------------------------------------------------------------------------------
 
-def get_file_path(customer, report_tag_dir, api_mount, file_type):
+def get_file_path(customer, custom_report_dir, api_mount, file_type):
     """
     Builds file name from input arguments
 
@@ -232,15 +233,15 @@ def get_file_path(customer, report_tag_dir, api_mount, file_type):
     """
 
     # add / at the end of report_tag_dir and convert to string
-    if report_tag_dir:
-        if not "/" in report_tag_dir:
-            report_tag_dir += "/"
-        report_tag_dir = str(report_tag_dir)
+    if custom_report_dir:
+        if not "/" in custom_report_dir:
+            custom_report_dir += "/"
+        report_tag_dir = str(custom_report_dir)
 
     if file_type == "report":
-        file_name = REPORT_DIR + customer + "/" + report_tag_dir + api_mount.replace("/", "_")
+        file_name = REPORT_DIR + customer + "/" + custom_report_dir + api_mount.replace("/", "_")
         # Create directory if does not exit
-        Path(REPORT_DIR + customer + "/" + report_tag_dir).mkdir(parents=True, exist_ok=True)
+        Path(REPORT_DIR + customer + "/" + custom_report_dir).mkdir(parents=True, exist_ok=True)
     else:
         file_name = RAW_OUTPUT_DIR + customer + "/" + api_mount.replace("/", "_")
         Path(RAW_OUTPUT_DIR + customer).mkdir(parents=True, exist_ok=True)
@@ -552,21 +553,6 @@ def stop_ssh_tunnel(ssh_tunnel):
 
 
 # -------------------------------------------------------------------------------------------
-
-# placeholder for Pytest
-def test_case1():
-    assert True
-
-
-def test_case2():
-    assert True
-
-
-def test_case3():
-    assert True
-
-
-# -------------------------------------------------------------------------------------------
 def main():
 
     # Added for using with sandbox, comment the line below for using in production
@@ -597,6 +583,7 @@ def main():
     for item in source_definitions:
         if item["data_source"] == source:
             api_query = item["api_mount"]
+
 
     # Get customer name from CLI
     customer_name = options.customer
@@ -637,6 +624,14 @@ def main():
     else:
         # Ask for password
         password = getpass.getpass("Password: ")
+
+    # Get customer report dir from CLI
+    if options.report_dir:
+        custom_report_dir = options.report_dir
+    else:
+        custom_report_dir = datetime.now().strftime('%Y-%m-%d')
+
+    print(custom_report_dir)
 
     # jump host is defined for a customer, build ssh tunnel
     ssh_tunnel = ""
@@ -716,13 +711,13 @@ def main():
         query_condition,
         get_file_path(customer_name, "", api_query.split("?")[0], "raw_output") + ".csv",
         "",
-        get_file_path(customer_name, options.report_dir, api_query.split("?")[0], "report") + ".csv",
+        get_file_path(customer_name, custom_report_dir, api_query.split("?")[0], "report") + ".csv",
     )
 
     # print result CSV file to screen unless it's set to False is CLI arguments
     if options.screen_output:
         df = pd.read_csv(
-            get_file_path(customer_name, options.report_dir, api_query.split("?")[0], "report") + ".csv",
+            get_file_path(customer_name, custom_report_dir, api_query.split("?")[0], "report") + ".csv",
             index_col=0,
         )
 
@@ -749,8 +744,8 @@ def main():
 
     if options.html_output:
         save_report_to_html(
-            get_file_path(customer_name, options.report_dir, api_query.split("?")[0], "report") + ".csv",
-            get_file_path(customer_name, options.report_dir, api_query.split("?")[0], "report") + ".html",
+            get_file_path(customer_name, custom_report_dir, api_query.split("?")[0], "report") + ".csv",
+            get_file_path(customer_name, custom_report_dir, api_query.split("?")[0], "report") + ".html",
         )
 
 
