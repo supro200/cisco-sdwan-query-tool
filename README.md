@@ -104,7 +104,8 @@ Optional:
 >
 >  *--report-dir*, *-dir*   - Directory for reports. If not specified, a new directory will be created in format YYYY-MM-DD. 
 >                             This can be used for comparing output of the same command, for example before and after making network changes.
->                             Please see *network-snapshot.txt* as an example
+>                             Please see *network-snapshot.txt* as an example.
+>
 >  *--password*, *-p*  - Password. If not given, you'll be asked to enter it when run the script. 
 >                                  Note: if you access vManage via a jumphost, the same password will be used for both devices.  
 
