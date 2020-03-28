@@ -631,8 +631,6 @@ def main():
     else:
         custom_report_dir = datetime.now().strftime('%Y-%m-%d')
 
-    print(custom_report_dir)
-
     # jump host is defined for a customer, build ssh tunnel
     ssh_tunnel = ""
     if jump_host:
