@@ -44,7 +44,7 @@ Windows:
 ```
 python -m venv <path>
 <path>\Scripts\activate.bat
-git clone https://github.com/supro200/sdwan-query-tool.git
+git clone https://github.com/supro200/cisco-sdwan-query-tool.git
 cd sdwan-query-tool
 pip install -r requirements.txt
 python sdnetsql.py -h
