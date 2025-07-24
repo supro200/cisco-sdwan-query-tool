@@ -17,13 +17,13 @@ jaraco.text==4.0.0
 more-itertools==10.7.0
 numpy==2.3.1
 packaging==25.0
-pandas
+pandas==2.3.1
 paramiko==3.5.1
 platformdirs==4.3.8
 pycparser==2.22
 PyNaCl==1.5.0
-python-dateutil==2.8.1
-pytz==2019.3
+python-dateutil==2.8.2
+pytz==2020.1
 requests==2.32.4
 six==1.13.0
 sshtunnel==0.4.0
